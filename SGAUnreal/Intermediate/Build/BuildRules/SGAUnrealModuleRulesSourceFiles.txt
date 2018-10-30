@@ -1,3 +1,0 @@
-D:\L.Programs\Programming\Unreal\SGA_unreal\SGAUnreal\Source\SGAUnreal\SGAUnreal.Build.cs
-D:\L.Programs\Programming\Unreal\SGA_unreal\SGAUnreal\Source\SGAUnreal.Target.cs
-D:\L.Programs\Programming\Unreal\SGA_unreal\SGAUnreal\Source\SGAUnrealEditor.Target.cs
