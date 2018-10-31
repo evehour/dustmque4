@@ -10,6 +10,8 @@
 #include "DrawDebugHelpers.h" // 디버그에 출력할 도형 모양 다 들어가있음
 #include "Animation/AnimMontage.h"
 
+#include "CPlayer.h"
+
 // Sets default values
 ACGoblin::ACGoblin()
 {
@@ -21,6 +23,7 @@ ACGoblin::ACGoblin()
 	Distance = 200;
 	AttackDistance = 130;
 	bDeath = false;
+	Attack = 10;
 
 	//오브젝트 파인더는 생성자에서만 사용가능
 	static ConstructorHelpers::FObjectFinder<UMaterial> bodyMaterial
@@ -36,6 +39,13 @@ ACGoblin::ACGoblin()
 		TEXT("/Game/Montages/BpMonGoblinDeath")
 	);
 	DeathMontage = deathMontage.Object;
+
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> attack
+	{
+		TEXT("/Game/Montages/BpMonGoblinAttack")
+	};
+	AttackMontage = attack.Object;
 }
 
 // Called when the game starts or when spawned
@@ -50,11 +60,17 @@ void ACGoblin::BeginPlay()
 	TSet<UActorComponent *> components = this->GetComponents();
 	for (UActorComponent* component : components)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("%s"), *component->GetFName().ToString());
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *component->GetFName().ToString());
 		//Print(*component->GetFName().ToString(), 30);
 		if (component->GetFName() == "CollisionCylinder")
 			MainCapsule = Cast<UCapsuleComponent>(component);
+
+		if (component->GetFName() == "Capsule")
+			WeaponCapsule = Cast<UCapsuleComponent>(component);
 	}
+
+	WeaponCapsule->OnComponentBeginOverlap.AddDynamic(this, &ACGoblin::OnBeginOverlap);
+	WeaponCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // Called every frame
@@ -70,7 +86,7 @@ void ACGoblin::Tick(float DeltaTime)
 	{
 	case GoblinState::Idle: Idling(); break;
 	case GoblinState::Follow: Following();  break;
-	case GoblinState::Attack: break;
+	case GoblinState::Attack: Attacking(); break;
 	case GoblinState::Death: Dying(); break;
 	}
 
@@ -128,10 +144,14 @@ void ACGoblin::Following()
 		State = GoblinState::Idle;
 }
 
-//void ACGoblin::Attacking()
-//{
-//
-//}
+void ACGoblin::Attacking()
+{
+	if (bAttack == true)
+		return;
+
+	bAttack = true;
+	PlayAnimMontage(AttackMontage);
+}
 
 void ACGoblin::Dying()
 {
@@ -177,5 +197,21 @@ void ACGoblin::DamagedComplete()
 
 void ACGoblin::OnEndAttack()
 {
+	bAttack = false;
 
+	State = GoblinState::Follow;
+}
+
+void ACGoblin::OnBeginOverlap_Implementation(UPrimitiveComponent * OverComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	if (OtherActor == this)
+		return;
+
+	//Print(*OtherActor->GetFName().ToString());
+
+	ACPlayer* player = Cast<ACPlayer>(OtherActor);
+	if (player == NULL)
+		return;
+
+	player->Damaged(Attack);
 }

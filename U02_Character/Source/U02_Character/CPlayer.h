@@ -19,6 +19,9 @@ public:
 		AActor* CameraObject;
 
 	UPROPERTY(EditAnywhere)
+		TSubclassOf<class UCameraShake> CameraShake;
+
+	UPROPERTY(EditAnywhere)
 		float Attack;
 
 	UFUNCTION(BlueprintCallable)
@@ -57,6 +60,9 @@ public:
 	void Attacking();
 	void Jumping();
 
+	void Damaged(float damage);
+	void DamagedComplete();
+
 	UFUNCTION(BlueprintNativeEvent)
 		void OnBeginOverlap
 		(
@@ -79,14 +85,22 @@ public:
 	);
 
 private:
+	void FinishComboComplete();
+
+private:
 	//class UCameraShake* CameraShake;
-	TSubclassOf<class UCameraShake> CameraShake;
+	//TSubclassOf<class UCameraShake> CameraShake;
 
 	UPROPERTY(VisibleAnywhere)
 	class UAnimMontage* AttackMontage[3];
 	class UAnimMontage* JumpMontage;
 
 	class UCapsuleComponent* WeaponCapsule;
+
+	class UParticleSystemComponent* FinishComboParticle;
+
+	UMaterial* BodyMaterial;
+	UMaterial* RedMaterial;
 
 	bool bAttack;
 	bool bNextCombo;

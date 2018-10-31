@@ -37,6 +37,9 @@ private:
 
 public:
 	UPROPERTY(EditAnywhere)
+		float Attack;
+
+	UPROPERTY(EditAnywhere)
 		float Hp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -51,14 +54,36 @@ public:
 	void Damaged(float damage);
 	void DamagedComplete();
 
+	UFUNCTION(BlueprintNativeEvent)
+		void OnBeginOverlap
+		(
+			UPrimitiveComponent* OverComp
+			, AActor* OtherActor
+			, UPrimitiveComponent* OtherComp
+			, int32 OtherBodyIndex
+			, bool bFromSweep
+			, const FHitResult& SweepResult
+		);
+
+	void OnBeginOverlap_Implementation
+	(
+		UPrimitiveComponent* OverComp
+		, AActor* OtherActor
+		, UPrimitiveComponent* OtherComp
+		, int32 OtherBodyIndex
+		, bool bFromSweep
+		, const FHitResult& SweepResult
+	);
+
 private:
 	void Idling();
 	void Following();
-	//void Attacking();
+	void Attacking();
 	void Dying();
 	void DyingComplete();
 
 private:
+	bool bAttack;
 	bool bDeath;
 
 	float DistanceToPlayer;
@@ -74,6 +99,8 @@ private:
 	UMaterialInstanceDynamic* RedBodyMaterial;
 
 	UCapsuleComponent* MainCapsule;
+	UCapsuleComponent* WeaponCapsule;
 
 	class UAnimMontage* DeathMontage;
+	class UAnimMontage* AttackMontage;
 };

@@ -47,6 +47,32 @@ ACPlayer::ACPlayer()
 	};
 
 	JumpMontage = jump.Object;
+
+	//static ConstructorHelpers::FObjectFinder<UParticleSystem> finishComboParticle
+	//{
+	//	TEXT("/Game/Particles/FinishComboParticle")
+	//};
+	//FinishComboParticle = CreateDefaultSubobject< UParticleSystemComponent>(TEXT("FinishComboParticle"));
+	//FinishComboParticle->SetTemplate(finishComboParticle.Object);
+	
+	//for (FParticleEmitterInstance* emitter : FinishComboParticle->EmitterInstances)
+	////for(UINT i = 0; i < FinishComboParticle->EmitterInstances)
+	//{
+	//	emitter->LoopCount = 1;
+	//}
+
+
+	static ConstructorHelpers::FObjectFinder<UMaterial> bodyMaterial
+	(
+		TEXT("/Game/Player/Materials/Body_SG")
+	);
+	BodyMaterial = bodyMaterial.Object;
+
+	static ConstructorHelpers::FObjectFinder<UMaterial> redMaterial
+	(
+		TEXT("/Game/Player/Materials/logo_m")
+	);
+	RedMaterial = redMaterial.Object;
 }
 
 // Called when the game starts or when spawned
@@ -64,23 +90,6 @@ void ACPlayer::BeginPlay()
 	WeaponCapsule->OnComponentBeginOverlap.AddDynamic(this, &ACPlayer::OnBeginOverlap);
 	WeaponCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	//TSubclassOf<UCameraShake>* shake; 로 나오는것들은 아래에 있는걸로 대체해주면 됨.
-	//CameraShake = UCameraShake::StaticClass()->GetDefaultObject<UCameraShake>();
-	//CameraShake = UCameraShake::GetDefaultSubobject
-	//CameraShake->OscillationDuration = 0.25f; // 카메라 흔드는 전체 시간 
-	//CameraShake->OscillationBlendInTime = 0.1f; // 시작 시간
-	//CameraShake->OscillationBlendOutTime = 0.2f; // 끝나는 강도
-
-	//CameraShake->RotOscillation.Pitch.Amplitude = FMath::RandRange(0.5f, 1.5f);
-	//CameraShake->RotOscillation.Pitch.Frequency = 25.0f;
-
-	//CameraShake->RotOscillation.Yaw.Amplitude = FMath::RandRange(0.5f, 1.5f);
-	//CameraShake->RotOscillation.Yaw.Frequency = 25.0f;
-
-	//CameraShake->RotOscillation.Roll.Amplitude = FMath::RandRange(0.5f, 1.5f);
-	//CameraShake->RotOscillation.Roll.Frequency = 25.0f;
-
-	
 
 	//// print string이랑 같은 애
 	//GEngine->AddOnScreenDebugMessage(
@@ -156,7 +165,7 @@ void ACPlayer::OnBeginOverlap_Implementation(UPrimitiveComponent * OverComp, AAc
 
 	// 플레이어 컨트롤러 가져오기.
 	APlayerController* cont = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	//cont->ClientPlayCameraShake(CameraShake,)
+	cont->ClientPlayCameraShake(CameraShake);
 
 	ACGoblin* monster = Cast<ACGoblin>(OtherActor);
 	if (monster != NULL)
@@ -176,7 +185,22 @@ void ACPlayer::Attacking()
 		bAttack = true;
 
 		PlayAnimMontage(AttackMontage[ComboCount]);
+
+		if (ComboCount > 1)
+		{
+			FTimerHandle handle;
+			GetWorldTimerManager().SetTimer(handle, this, &ACPlayer::FinishComboComplete, 0.47f, false);
+		}
 	}
+}
+
+void ACPlayer::FinishComboComplete()
+{
+	//UGameplayStatics::SpawnEmitterAtLocation
+	//(
+	//	GetWorld(), (UParticleSystem*)FinishComboParticle,
+	//	GetActorLocation(), FRotator::ZeroRotator, FVector::OneVector, true
+	//);
 }
 
 void ACPlayer::OnEndAttack()
@@ -204,5 +228,18 @@ void ACPlayer::OnFinishCombo()
 	bNextCombo = false;
 
 	ComboCount = 0;
+}
+
+void ACPlayer::Damaged(float damage)
+{
+	GetMesh()->SetMaterial(0, RedMaterial);
+
+	FTimerHandle handle;
+	GetWorldTimerManager().SetTimer(handle, this, &ACPlayer::DamagedComplete, 0.2f, false);
+}
+
+void ACPlayer::DamagedComplete()
+{
+	GetMesh()->SetMaterial(0, BodyMaterial);
 }
 
