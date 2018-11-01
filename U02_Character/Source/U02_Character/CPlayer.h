@@ -24,6 +24,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		float Attack;
 
+	UPROPERTY(EditAnywhere)
+		float Hp;
+
 	UFUNCTION(BlueprintCallable)
 		void OnEndAttack();
 
@@ -32,6 +35,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void OnFinishCombo();
+
+	UFUNCTION(BlueprintCallable)
+		void OnRangeAttack();
 
 protected:
 	// Called when the game starts or when spawned

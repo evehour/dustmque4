@@ -16,6 +16,7 @@ ACPlayer::ACPlayer()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	Hp = 100.0f;
 	Attack = 30.0f;
 	bAttack = false;
 	bNextCombo = false;
@@ -45,7 +46,6 @@ ACPlayer::ACPlayer()
 	{
 		TEXT("/Game/Montages/BpMonSwordJump")
 	};
-
 	JumpMontage = jump.Object;
 
 	//static ConstructorHelpers::FObjectFinder<UParticleSystem> finishComboParticle
@@ -232,6 +232,9 @@ void ACPlayer::OnFinishCombo()
 
 void ACPlayer::Damaged(float damage)
 {
+
+	Hp -= damage;
+	if (Hp <= 0.0f) Hp = 0.0f;
 	GetMesh()->SetMaterial(0, RedMaterial);
 
 	FTimerHandle handle;
@@ -241,5 +244,25 @@ void ACPlayer::Damaged(float damage)
 void ACPlayer::DamagedComplete()
 {
 	GetMesh()->SetMaterial(0, BodyMaterial);
+}
+
+void ACPlayer::OnRangeAttack()
+{
+	FVector location = this->GetActorLocation();
+
+	//액터 찾기
+	for (TActorIterator<ACGoblin> iter(GetWorld()); iter; ++iter)
+	{
+		ACGoblin* goblin = *iter;
+		FVector location2 = goblin->GetActorLocation();
+
+		float distance = FVector::Dist(location, location2);
+
+		if (distance < 300)
+		{
+			goblin->Damaged(Attack);
+		}
+	}
+
 }
 

@@ -40,19 +40,22 @@ public:
 		float Attack;
 
 	UPROPERTY(EditAnywhere)
+		float AttackDelay;
+
+	UPROPERTY(EditAnywhere)
 		float Hp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float Distance;
 
 	UPROPERTY(EditAnywhere)
+		float ReAttackDistance;
+
+	UPROPERTY(EditAnywhere)
 		float AttackDistance;
 
 	UFUNCTION(BlueprintCallable)
 		void OnEndAttack();
-
-	void Damaged(float damage);
-	void DamagedComplete();
 
 	UFUNCTION(BlueprintNativeEvent)
 		void OnBeginOverlap
@@ -74,6 +77,12 @@ public:
 		, bool bFromSweep
 		, const FHitResult& SweepResult
 	);
+
+	void Damaged(float damage);
+	void DamagedComplete();
+
+private:
+	void OnEndAttackComplete();
 
 private:
 	void Idling();
@@ -103,4 +112,5 @@ private:
 
 	class UAnimMontage* DeathMontage;
 	class UAnimMontage* AttackMontage;
+	class UAnimMontage* DamageMontage;
 };

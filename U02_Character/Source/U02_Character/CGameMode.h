@@ -14,7 +14,21 @@ class U02_CHARACTER_API ACGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 	
+public:
+	ACGameMode();
+
+	UPROPERTY(BlueprintReadOnly)
+		float PlayerHpRatio;
+
+	UPROPERTY(BlueprintReadOnly)
+		class UUserWidget* HpBar;
+
+protected:
+	virtual void BeginPlay() override;
+	virtual void Tick(float delta) override;
 	
-	
-	
+private:
+	class ACPlayer* player;
+
+	TSubclassOf<class UUserWidget> HpBarWidget;
 };

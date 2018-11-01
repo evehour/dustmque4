@@ -21,9 +21,11 @@ ACGoblin::ACGoblin()
 	State = GoblinState::Idle;
 	Hp = 100;
 	Distance = 200;
-	AttackDistance = 130;
+	AttackDistance = 150;
+	ReAttackDistance = 180;
 	bDeath = false;
 	Attack = 10;
+	AttackDelay = 2.0f;
 
 	//오브젝트 파인더는 생성자에서만 사용가능
 	static ConstructorHelpers::FObjectFinder<UMaterial> bodyMaterial
@@ -46,6 +48,13 @@ ACGoblin::ACGoblin()
 		TEXT("/Game/Montages/BpMonGoblinAttack")
 	};
 	AttackMontage = attack.Object;
+
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> damage
+	{
+		TEXT("/Game/Montages/BpMonGoblinHit")
+	};
+	DamageMontage = damage.Object;
 }
 
 // Called when the game starts or when spawned
@@ -140,8 +149,8 @@ void ACGoblin::Following()
 		State = GoblinState::Attack;
 	else if (DistanceToPlayer <= Distance)
 		AddMovementInput(DirectionToPlayer);
-	else
-		State = GoblinState::Idle;
+	//else
+	//	State = GoblinState::Idle;
 }
 
 void ACGoblin::Attacking()
@@ -162,6 +171,7 @@ void ACGoblin::Dying()
 	
 	// 죽었을 때 충돌 컬라이더 해제.
 	MainCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// 해당 몽타쥬의 종료시간이 리턴됨.
 	float playTime = PlayAnimMontage(DeathMontage, 1.0f);
@@ -178,8 +188,13 @@ void ACGoblin::DyingComplete()
 
 void ACGoblin::Damaged(float damage)
 {
+	if (bDeath == true)
+		return;
+
 	Hp -= damage;
 	PrintFormat("%f", Hp);
+
+	PlayAnimMontage(DamageMontage);
 
 	RedBodyMaterial->SetVectorParameterValue("Color", FLinearColor(1, 0, 0, 1));
 
@@ -191,14 +206,30 @@ void ACGoblin::DamagedComplete()
 {
 	RedBodyMaterial->SetVectorParameterValue("Color", FLinearColor(1, 1, 1, 1));
 
+	OnEndAttack();
+	//bAttack = false;
+	//State = GoblinState::Idle;
+
 	if (Hp <= 0.0f)
 		State = GoblinState::Death;
 }
 
 void ACGoblin::OnEndAttack()
 {
-	bAttack = false;
+	if (DistanceToPlayer < ReAttackDistance)
+	{
+		FTimerHandle handle;
+		GetWorldTimerManager().SetTimer(handle, this, &ACGoblin::OnEndAttackComplete, AttackDelay, false);
+	}
+	else
+	{
+		OnEndAttackComplete();
+	}
+}
 
+void ACGoblin::OnEndAttackComplete()
+{
+	bAttack = false;
 	State = GoblinState::Follow;
 }
 
