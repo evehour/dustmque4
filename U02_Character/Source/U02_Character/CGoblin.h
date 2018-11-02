@@ -45,6 +45,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		float Hp;
 
+	UPROPERTY(BlueprintReadOnly)
+		float HpRatio;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		float Distance;
 

@@ -9,21 +9,11 @@
 ACGameMode::ACGameMode()
 {
 	PrimaryActorTick.bCanEverTick = true; // ¿Ã∞… «ÿ¡‡æﬂ ∆Ω¿Ã »£√‚µ .
-
-	static ConstructorHelpers::FClassFinder<UUserWidget> hpBar
-	(
-		TEXT("/Game/Widgets/PlayerHpBar")
-	);
-	HpBarWidget = hpBar.Class;
 }
 
 void ACGameMode::BeginPlay()
 {
-	if (HpBarWidget != NULL)
-	{
-		APlayerController* cont = GetWorld()->GetFirstPlayerController();
-		HpBar = CreateWidget<UUserWidget>(cont, HpBarWidget);
-	}
+	Super::BeginPlay();
 
 	//æ◊≈Õ √£±‚
 	for (TActorIterator<ACPlayer> iter(GetWorld()); iter; ++iter)
@@ -34,10 +24,11 @@ void ACGameMode::BeginPlay()
 
 void ACGameMode::Tick(float delta)
 {
+	Super::Tick(delta);
+
 	float hp = player->Hp;
 	PlayerHpRatio = hp / 100.0f;
 
-	
 }
 
 

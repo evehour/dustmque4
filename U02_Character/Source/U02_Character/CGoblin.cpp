@@ -90,6 +90,8 @@ void ACGoblin::Tick(float DeltaTime)
 	if(bDeath == true)
 		return;
 
+	HpRatio = Hp / 100.0f;
+
 	GetPlayerDistanceAndDirection();
 	switch (State)
 	{
@@ -175,6 +177,10 @@ void ACGoblin::Dying()
 
 	// 해당 몽타쥬의 종료시간이 리턴됨.
 	float playTime = PlayAnimMontage(DeathMontage, 1.0f);
+
+	// 블프에서 만든 함수 호출하는 방법
+	FOutputDeviceNull od;
+	CallFunctionByNameWithArguments(TEXT("DestroyHpBar"), od, this, true);
 
 	FTimerHandle handle;
 	GetWorldTimerManager().SetTimer(handle, this, &ACGoblin::DyingComplete, playTime + 3.0f, false);

@@ -20,15 +20,10 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 		float PlayerHpRatio;
 
-	UPROPERTY(BlueprintReadOnly)
-		class UUserWidget* HpBar;
-
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float delta) override;
 	
 private:
 	class ACPlayer* player;
-
-	TSubclassOf<class UUserWidget> HpBarWidget;
 };
