@@ -20,10 +20,16 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 		float PlayerHpRatio;
 
+public:
+	void AddGoblinCount();
+	void SubGoblinCount();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float delta) override;
 	
 private:
 	class ACPlayer* player;
+
+	int GoblinCount;
 };

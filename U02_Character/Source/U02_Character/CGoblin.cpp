@@ -12,6 +12,8 @@
 
 #include "CPlayer.h"
 
+#include "CGameMode.h"
+
 // Sets default values
 ACGoblin::ACGoblin()
 {
@@ -61,6 +63,9 @@ ACGoblin::ACGoblin()
 void ACGoblin::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ACGameMode* gameMode = Cast<ACGameMode>(GetWorld()->GetAuthGameMode());
+	gameMode->AddGoblinCount();
 
 	//Instance생성은 생성자에서 하면 안되고 여기서 해야함.
 	RedBodyMaterial = UMaterialInstanceDynamic::Create(BodyMaterial, this);
@@ -189,6 +194,21 @@ void ACGoblin::Dying()
 void ACGoblin::DyingComplete()
 {
 	//StopAnimMontage(DeathMontage);
+	ACGameMode* gameMode = Cast<ACGameMode>(GetWorld()->GetAuthGameMode());
+	gameMode->SubGoblinCount();
+
+	//UGameplayStatics::GetAllActorsOfClass()
+	/*
+	해당 테그를 가진 컴포넌트를 갖고있는 액터들이 배열로 들어옴!
+	{
+		TArray<AActor *> actors;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("Tag"), actors);
+	}
+	*/
+
+	//TSubclassOf<UActorComponent(해당 컴포넌트 자료형으로 설정한 후에> com;
+	//this->GetComponentsByTag(com, FName("Tag"));
+
 	Destroy();
 }
 

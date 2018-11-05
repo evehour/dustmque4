@@ -6,9 +6,13 @@
 #include "CPlayer.h"
 #include "Blueprint/UserWidget.h"
 
+#include "CConsoleLog.h"
+
 ACGameMode::ACGameMode()
 {
 	PrimaryActorTick.bCanEverTick = true; // ¿Ã∞… «ÿ¡‡æﬂ ∆Ω¿Ã »£√‚µ .
+
+	GoblinCount;
 }
 
 void ACGameMode::BeginPlay()
@@ -31,4 +35,19 @@ void ACGameMode::Tick(float delta)
 
 }
 
+void ACGameMode::AddGoblinCount()
+{
+	GoblinCount++;
+}
+
+void ACGameMode::SubGoblinCount()
+{
+	GoblinCount--;
+
+	if (GoblinCount <= 0)
+	{
+		//TODO: ∫∏Ω∫ √‚«ˆ
+		Print("Spawn Boss!!");
+	}
+}
 
