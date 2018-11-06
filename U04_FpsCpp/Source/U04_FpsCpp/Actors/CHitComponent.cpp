@@ -22,6 +22,7 @@ ACHitComponent::ACHitComponent()
 	// 컬리젼 쪽에있는 컬리전 프리셋을 지정하는 것임.
 	// Block은 통과가 아니라 튕겨져 나가게금 하는 것.
 	Box->BodyInstance.SetCollisionProfileName("BlockAllDynamic");
+
 	
 	// 블록이라서 오버랩이 아니라 힛으로 해야 함.
 	Box->OnComponentHit.AddDynamic(this, &ACHitComponent::OnBeginOverlap);
