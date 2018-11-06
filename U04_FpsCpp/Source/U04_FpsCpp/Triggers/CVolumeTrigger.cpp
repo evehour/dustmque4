@@ -39,7 +39,7 @@ void ACVolumeTrigger::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	DrawDebugSphere(GetWorld(), GetActorLocation(), 300.0f, 20, FColor::Purple, true, FLT_MAX);
+	DrawDebugSphere(GetWorld(), GetActorLocation(), 300.0f, 50, FColor::Purple, true, FLT_MAX);
 }
 
 // Called every frame

@@ -133,6 +133,13 @@ protected:
 	bool EnableTouchscreenMovement(UInputComponent* InputComponent);
 
 public:
+	UPROPERTY(EditAnywhere)
+		float LineLength;
+private:
+	void FireTraceLine();
+	void FireAddForce();
+
+public:
 	/** Returns Mesh1P subobject **/
 	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/

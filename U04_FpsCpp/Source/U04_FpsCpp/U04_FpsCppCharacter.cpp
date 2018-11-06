@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
+#include "CConsoleLog.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -25,6 +26,7 @@ AU04_FpsCppCharacter::AU04_FpsCppCharacter()
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
+	LineLength = 2000.0f;
 
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -140,33 +142,40 @@ void AU04_FpsCppCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 
 void AU04_FpsCppCharacter::OnFire()
 {
-	// try and fire a projectile
-	if (ProjectileClass != NULL)
-	{
-		UWorld* const World = GetWorld();
-		if (World != NULL)
-		{
-			if (bUsingMotionControllers)
-			{
-				const FRotator SpawnRotation = VR_MuzzleLocation->GetComponentRotation();
-				const FVector SpawnLocation = VR_MuzzleLocation->GetComponentLocation();
-				World->SpawnActor<AU04_FpsCppProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
-			}
-			else
-			{
-				const FRotator SpawnRotation = GetControlRotation();
-				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+	// 라인 발사!
+	//FireTraceLine();
 
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+	// 밀쳐내기 발사!
+	FireAddForce();
 
-				// spawn the projectile at the muzzle
-				World->SpawnActor<AU04_FpsCppProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			}
-		}
-	}
+	// 총알 쏴주는 부분
+	//// try and fire a projectile
+	//if (ProjectileClass != NULL)
+	//{
+	//	UWorld* const World = GetWorld();
+	//	if (World != NULL)
+	//	{
+	//		if (bUsingMotionControllers)
+	//		{
+	//			const FRotator SpawnRotation = VR_MuzzleLocation->GetComponentRotation();
+	//			const FVector SpawnLocation = VR_MuzzleLocation->GetComponentLocation();
+	//			World->SpawnActor<AU04_FpsCppProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
+	//		}
+	//		else
+	//		{
+	//			const FRotator SpawnRotation = GetControlRotation();
+	//			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+	//			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+
+	//			//Set Spawn Collision Handling Override
+	//			FActorSpawnParameters ActorSpawnParams;
+	//			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+	//			// spawn the projectile at the muzzle
+	//			World->SpawnActor<AU04_FpsCppProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+	//		}
+	//	}
+	//}
 
 	// try and play the sound if specified
 	if (FireSound != NULL)
@@ -182,6 +191,61 @@ void AU04_FpsCppCharacter::OnFire()
 		if (AnimInstance != NULL)
 		{
 			AnimInstance->Montage_Play(FireAnimation, 1.f);
+		}
+	}
+}
+
+void AU04_FpsCppCharacter::FireTraceLine()
+{
+	FHitResult outHit;
+	//FP_Gun : 총구 객체
+	FVector start = FP_Gun->GetComponentLocation();
+	FVector forward = FirstPersonCameraComponent->GetForwardVector();
+	FVector end = (forward * 1000.0f) + start;
+
+	DrawDebugLine(GetWorld(), start, end, FColor::Green, true, 0.5f, 0, 0.3f);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(outHit, start, end, ECC_Visibility);
+	if (bHit == true)
+	{
+		if (outHit.bBlockingHit == true)
+		{
+			PrintFormat("Hitting : %s", *outHit.GetActor()->GetName());
+			PrintFormat("Impact Point : %s", *outHit.ImpactPoint.ToString()); // 충돌된 지점
+			PrintFormat("Normal Point : %s", *outHit.ImpactNormal.ToString()); // 충돌된 지점의 수직
+		}
+	}
+}
+
+void AU04_FpsCppCharacter::FireAddForce()
+{
+	FHitResult outHit;
+	FVector forward = FirstPersonCameraComponent->GetForwardVector();
+
+	FRotator spawnRotation = GetControlRotation();
+	FVector startLocation = (FP_MuzzleLocation != NULL) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation();
+	startLocation += spawnRotation.RotateVector(GunOffset); // Transformcood
+
+	UE_LOG(LogClass, Log, TEXT("Start Location : %s"), *startLocation.ToString());
+	UE_LOG(LogClass, Log, TEXT("Spawn Rotation : %s"), *spawnRotation.ToString());
+	UE_LOG(LogClass, Log, TEXT("Forward Vector : %s"), *forward.ToString());
+
+	FVector end = startLocation + (forward * LineLength);
+
+	GetWorld()->LineTraceSingleByChannel(outHit, startLocation, end, ECollisionChannel::ECC_PhysicsBody);
+
+	DrawDebugLine(GetWorld(), startLocation, end, FColor::Green, true, 0.5f, 0, 0.3f);
+
+	if (outHit.GetActor() != NULL)
+	{
+		if (outHit.GetActor()->IsRootComponentMovable())
+		{
+			UStaticMeshComponent* mesh = Cast<UStaticMeshComponent>(outHit.GetActor()->GetRootComponent());
+
+			UE_LOG(LogClass, Log, TEXT("Hit: %s"), *outHit.GetActor()->GetName());
+			UE_LOG(LogClass, Log, TEXT("Mesh Mass: %f"), mesh->GetMass());
+
+			mesh->AddForce(forward * 100000 * mesh->GetMass());
 		}
 	}
 }
